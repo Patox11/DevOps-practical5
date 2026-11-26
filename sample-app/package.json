@@ -1,0 +1,11 @@
+{
+  "name": "my-web-app",
+  "version": "1.0.0",
+  "description": "Sample web application for CI/CD practicals",
+  "scripts": {
+    "start": "node app.js",
+    "build": "node build.js",
+    "test": "node test.js"
+  },
+  "license": "MIT"
+}
