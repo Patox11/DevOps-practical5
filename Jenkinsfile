@@ -14,21 +14,21 @@ pipeline {
         stage('Install Dependencies') {
             steps {
                 echo 'Installing npm dependencies...'
-                bat 'npm install'
+                sh 'npm install'
             }
         }
 
         stage('Build') {
             steps {
                 echo 'Building the project...'
-                bat 'npm run build --if-present'
+                sh 'npm run build --if-present'
             }
         }
 
         stage('Test') {
             steps {
                 echo 'Running tests...'
-                bat 'npm test'
+                sh 'npm test'
             }
         }
 
