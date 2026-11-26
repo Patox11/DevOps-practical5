@@ -7,7 +7,7 @@ pipeline {
     agent any
 
     environment {
-        DOCKER_IMAGE          = 'YOURDOCKERUSER/my-web-app'   // <-- change to your Docker Hub username
+        DOCKER_IMAGE          = 'ishimwe250/my-web-app'   // <-- change to your Docker Hub username
         DOCKER_CREDENTIALS_ID = 'docker-hub-credentials'
         CONTAINER_NAME        = 'my-web-app'
     }
