@@ -1,85 +1,50 @@
-// Practical 2: Build, push to Docker Hub, and deploy with Jenkins
-// Prerequisites: Docker installed on the Jenkins host, and a Jenkins
-// "Username with password" credential with ID 'docker-hub-credentials'.
-// On Windows agents, replace `sh` with `bat` (and drop the `|| true` trick
-// by using `docker rm -f my-web-app || exit 0`).
+// Practical 1: Jenkins pipeline for a Node.js web app (Windows agent)
+// On Linux/macOS agents, replace every `bat` with `sh`.
 pipeline {
     agent any
 
-    environment {
-        DOCKER_IMAGE          = 'YOURDOCKERUSER/my-web-app'   // <-- change to your Docker Hub username
-        DOCKER_CREDENTIALS_ID = 'docker-hub-credentials'
-        CONTAINER_NAME        = 'my-web-app'
-    }
-
     stages {
-        stage('Checkout') {
+        stage('Clone') {
             steps {
+                echo 'Cloning source code from GitHub...'
                 checkout scm
             }
         }
 
-        stage('Install & Test') {
+        stage('Install Dependencies') {
             steps {
+                echo 'Installing npm dependencies...'
                 sh 'npm install'
+            }
+        }
+
+        stage('Build') {
+            steps {
+                echo 'Building the project...'
+                sh 'npm run build --if-present'
+            }
+        }
+
+        stage('Test') {
+            steps {
+                echo 'Running tests...'
                 sh 'npm test'
             }
         }
 
-        stage('Build Docker Image') {
+        stage('Deploy to Staging') {
             steps {
-                script {
-                    dockerImage = docker.build("${DOCKER_IMAGE}:${env.BUILD_NUMBER}")
-                }
-            }
-        }
-
-        stage('Push to Docker Hub') {
-            steps {
-                script {
-                    docker.withRegistry('https://index.docker.io/v1/', DOCKER_CREDENTIALS_ID) {
-                        dockerImage.push("${env.BUILD_NUMBER}")
-                        dockerImage.push('latest')
-                    }
-                }
-            }
-        }
-
-        stage('Deploy to Local Docker Host') {
-            steps {
-                sh '''
-                    docker rm -f ${CONTAINER_NAME} || true
-                    docker run -d --name ${CONTAINER_NAME} -p 8081:80 ${DOCKER_IMAGE}:latest
-                '''
-            }
-        }
-
-        // Use this stage instead of the local one for a remote Docker host.
-        // Requires the SSH Agent plugin and a credential with ID 'remote-host-ssh-key'.
-        /*
-        stage('Deploy to Remote Docker Host') {
-            steps {
-                sshagent(['remote-host-ssh-key']) {
-                    sh '''
-                        ssh -o StrictHostKeyChecking=no user@remote-host "docker pull ${DOCKER_IMAGE}:latest"
-                        ssh user@remote-host "docker rm -f ${CONTAINER_NAME} || true"
-                        ssh user@remote-host "docker run -d --name ${CONTAINER_NAME} -p 8081:80 ${DOCKER_IMAGE}:latest"
-                    '''
-                }
-            }
-        }
-        */
-
-        stage('Verify Deployment') {
-            steps {
-                sh 'sleep 5 && curl -f http://localhost:8081'
+                echo 'Tests passed. Deploying to staging...'
             }
         }
     }
 
     post {
+        success {
+            echo 'Pipeline completed successfully.'
+        }
         failure {
-            echo 'Deployment failed. Check the console output and container logs (docker logs my-web-app).'
+            echo 'Pipeline failed. Check the console output.'
         }
     }
 }
